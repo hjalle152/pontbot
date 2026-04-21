@@ -1,0 +1,6 @@
+{
+  "$schema": "https://schema.railway.com",
+  "deploy": {
+    "startCommand": "python pontbot.py"
+  }
+}
