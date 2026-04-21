@@ -22,7 +22,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 def load_data():
     if not os.path.exists(DATA_FILE):
-        return {"sent_times": []}
+        return {"last_sent_date": None}
     with open(DATA_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -57,16 +57,15 @@ async def daily_loop():
     if now >= target:
         return
 
-    # Skicka bara 00:30 och 12:00
-    valid_times = [(0, 30), (12, 0)]
-    if (now.hour, now.minute) not in valid_times:
+    # Endast kl 12:00
+    if not (now.hour == 12 and now.minute == 0):
         return
 
     data = load_data()
-    current_key = now.strftime("%Y-%m-%d %H:%M")
+    today_key = now.strftime("%Y-%m-%d")
 
-    # Undvik dubbelskick för samma tidpunkt
-    if current_key in data.get("sent_times", []):
+    # Undvik att skicka flera gånger samma dag
+    if data.get("last_sent_date") == today_key:
         return
 
     days_left = days_remaining(now)
@@ -78,6 +77,16 @@ async def daily_loop():
         except Exception as e:
             print(f"Kunde inte hitta kanal: {e}")
             return
+
+    await channel.send(
+        f"@everyone nu är det {days_left} dagar kvar av Pontus Rasmussons straff.",
+        allowed_mentions=discord.AllowedMentions(everyone=True)
+    )
+
+    data["last_sent_date"] = today_key
+    save_data(data)
+
+    print(f"Skickade dagsmeddelande: {days_left} dagar kvar")
 
     await channel.send(
         f"@everyone nu är det {days_left} dagar kvar av Pontus Rasmussons straff.",
