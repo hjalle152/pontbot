@@ -6,7 +6,10 @@ from zoneinfo import ZoneInfo
 import discord
 from discord.ext import commands, tasks
 
-TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+print("TOKEN EXISTS:", "DISCORD_BOT_TOKEN" in os.environ)
+print("TOKEN VALUE LENGTH:", len(os.environ.get("DISCORD_BOT_TOKEN", "")))
+print("TOKEN PREVIEW:", repr(os.environ.get("DISCORD_BOT_TOKEN")))
+TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
 DATA_FILE = "countdown_months.json"
 
 TARGET_YEAR = 2027
@@ -148,5 +151,5 @@ async def monthly_loop():
 async def before_monthly_loop():
     await bot.wait_until_ready()
 
-
+print("RUNNING FILE:", __file__)
 bot.run(TOKEN)
