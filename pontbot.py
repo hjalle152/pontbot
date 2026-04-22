@@ -1,10 +1,12 @@
 import os
 import json
+import random
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import discord
 from discord.ext import commands, tasks
+from discord import app_commands
 
 TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
 DATA_FILE = "countdown_days.json"
@@ -39,14 +41,67 @@ def target_datetime():
 def days_remaining(now: datetime) -> int:
     target = target_datetime()
     remaining = target - now
-    return remaining.days
+    return max(0, remaining.days)
+
+
+# 🔥 FUN FACTS
+PONTUS_FUN_FACTS = [
+    "Pontus-fun fact: Pontus luktar bättre än Julis Qvarnström.",
+    "Pontus-fun fact: Botten är gjord av Hjalmar, Hjalmar är bättre än Julius",
+    "Pontus-fun fact: Pontus är född 1998 i Ingelstad.",
+    "Pontus-fun fact: År 2021 uppmärksammades Rasmussons Youtube-kanal som en av de mest inflytelserika i Sverige och beskrevs som den femte mäktigaste i landet.",
+    "Pontus-fun fact: Rasmussons kanaler stängdes ned av Youtube 2022 efter att Svenska Dagbladet publicerat en granskning av hans verksamhet.",
+    "Pontus-fun fact: Som 15-åring släppte Pontus en egenproducerad EP på Spotify och började därefter publicera covers av poplåtar.",
+    "Pontus-fun fact: I augusti 2021 publicerade Rasmusson en video på TikTok där han uppgav sig vara född 2004.",
+    "Pontus-fun fact: Om jag tar din oskuld lämnar jag dig aldrig. Jag menar, varför skulle jag någonsin lämna en tjej som litade på mig med hennes kropp?",
+    "Pontus-fun fact:I juli 2025 väckte Pontus Rasmusson ny debatt efter att ha startat ett konto på prenumerationsplattformen OnlyFans tillsammans med sin flickvän.",
+    "Pontus-fun fact: År 2026 dömdes Pontus Rasmusson av Växjö tingsrätt till ett års fängelse och tre års näringsförbud för grovt bokföringsbrott. Han ålades även att betala en företagsbot om 50 000 kronor.",
+    "Pontus-fun fact: Bajskorv hehe @rulltarat.",
+]
 
 
 @bot.event
 async def on_ready():
     print(f"Inloggad som {bot.user}")
+
+    try:
+        synced = await bot.tree.sync()
+        print(f"Synkade {len(synced)} commands")
+    except Exception as e:
+        print(e)
+
     if not daily_loop.is_running():
         daily_loop.start()
+
+
+# ✅ /tidkvar
+@bot.tree.command(name="tidkvar", description="Visar hur många dagar som är kvar")
+async def tidkvar(interaction: discord.Interaction):
+    now = datetime.now(TIMEZONE)
+    days_left = days_remaining(now)
+
+    await interaction.response.send_message(
+        f"Det är {days_left} dagar kvar av Pontus Rasmussons straff."
+    )
+
+
+
+@bot.tree.command(name="hjälp", description="Visar alla kommandon")
+async def hjälp(interaction: discord.Interaction):
+    await interaction.response.send_message(
+        "**Kommandon:**\n"
+        "/tidkvar - visar hur många dagar som är kvar\n"
+        "/pontusfakta - slumpad fun fact\n"
+        "/hjälp - visar denna lista"
+    )
+
+
+
+@bot.tree.command(name="pontusfakta", description="Slumpad fun fact")
+async def pontusfakta(interaction: discord.Interaction):
+    fact = random.choice(PONTUS_FUN_FACTS)
+    await interaction.response.send_message(fact)
+
 
 
 @tasks.loop(minutes=1)
@@ -57,14 +112,12 @@ async def daily_loop():
     if now >= target:
         return
 
-    # Endast kl 12:00
     if not (now.hour == 12 and now.minute == 0):
         return
 
     data = load_data()
     today_key = now.strftime("%Y-%m-%d")
 
-    # Undvik att skicka flera gånger samma dag
     if data.get("last_sent_date") == today_key:
         return
 
@@ -87,21 +140,6 @@ async def daily_loop():
     save_data(data)
 
     print(f"Skickade dagsmeddelande: {days_left} dagar kvar")
-
-    await channel.send(
-        f"@everyone nu är det {days_left} dagar kvar av Pontus Rasmussons straff.",
-        allowed_mentions=discord.AllowedMentions(everyone=True)
-    )
-
-    data["sent_times"].append(current_key)
-
-    # håll listan liten
-    if len(data["sent_times"]) > 50:
-        data["sent_times"] = data["sent_times"][-50:]
-
-    save_data(data)
-
-    print(f"Skickade dagsmeddelande: {current_key} - {days_left} dagar kvar")
 
 
 @daily_loop.before_loop
