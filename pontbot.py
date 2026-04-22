@@ -16,7 +16,10 @@ TARGET_MONTH = 2
 TARGET_DAY = 13
 
 TIMEZONE = ZoneInfo("Europe/Stockholm")
-CHANNEL_ID = 1496261996830523602
+CHANNEL_IDS = [
+    1496261996830523602,
+    1471654566582816769
+]
 
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -123,15 +126,20 @@ async def daily_loop():
 
     days_left = days_remaining(now)
 
-    channel = bot.get_channel(CHANNEL_ID)
+   for channel_id in CHANNEL_IDS:
+        channel = bot.get_channel(channel_id)
+
     if channel is None:
         try:
-            channel = await bot.fetch_channel(CHANNEL_ID)
+            channel = await bot.fetch_channel(channel_id)
         except Exception as e:
-            print(f"Kunde inte hitta kanal: {e}")
-            return
+            print(f"Kunde inte hitta kanal {channel_id}: {e}")
+            continue
 
     await channel.send(
+        f"@everyone nu är det {days_left} dagar kvar av Pontus Rasmussons straff.",
+        allowed_mentions=discord.AllowedMentions(everyone=True)
+    )
         f"@everyone nu är det {days_left} dagar kvar av Pontus Rasmussons straff.",
         allowed_mentions=discord.AllowedMentions(everyone=True)
     )
