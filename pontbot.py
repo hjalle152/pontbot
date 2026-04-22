@@ -126,23 +126,20 @@ async def daily_loop():
 
     days_left = days_remaining(now)
 
-   for channel_id in CHANNEL_IDS:
+    for channel_id in CHANNEL_IDS:
         channel = bot.get_channel(channel_id)
 
-    if channel is None:
-        try:
-            channel = await bot.fetch_channel(channel_id)
-        except Exception as e:
-            print(f"Kunde inte hitta kanal {channel_id}: {e}")
-            continue
+        if channel is None:
+            try:
+                channel = await bot.fetch_channel(channel_id)
+            except Exception as e:
+                print(f"Kunde inte hitta kanal {channel_id}: {e}")
+                continue
 
-    await channel.send(
-        f"@everyone nu är det {days_left} dagar kvar av Pontus Rasmussons straff.",
-        allowed_mentions=discord.AllowedMentions(everyone=True)
-    )
-        f"@everyone nu är det {days_left} dagar kvar av Pontus Rasmussons straff.",
-        allowed_mentions=discord.AllowedMentions(everyone=True)
-    )
+        await channel.send(
+            f"@everyone nu är det {days_left} dagar kvar av Pontus Rasmussons straff.",
+            allowed_mentions=discord.AllowedMentions(everyone=True)
+        )
 
     data["last_sent_date"] = today_key
     save_data(data)
